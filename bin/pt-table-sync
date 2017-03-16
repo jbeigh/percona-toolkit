@@ -10874,10 +10874,13 @@ sub get_cxn {
    # http://code.google.com/p/maatkit/issues/detail?id=95
    # https://bugs.launchpad.net/percona-toolkit/+bug/919352
    # The tool shouldn't blindly attempt to change binlog_format;
-   # instead, it should check if it's already set to STATEMENT.
+   # instead, it should check if it's already set to STATEMENT
+   # and only change binlog_format if the given options require it
+   # (replicate, sync-to-master).
    # This is becase starting with MySQL 5.1.29, changing the format
    # requires a SUPER user.
-   if ( VersionParser->new($dbh) >= '5.1.29' ) {
+   if ( $o->get('replicate')
+       || $o->get('sync-to-master') ) {
       $sql = 'SELECT @@binlog_format';
       PTDEBUG && _d($dbh, $sql);
       my ($original_binlog_format) = $dbh->selectrow_array($sql);
